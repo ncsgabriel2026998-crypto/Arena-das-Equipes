@@ -2,431 +2,497 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>Arena das Equipes</title>
-
 <style>
 *{box-sizing:border-box}
-
-body{
-  margin:0;
-  background:#101820;
-  color:#fff;
-  font-family:Arial;
-  text-align:center;
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#08111b;color:#fff;font-family:Arial,sans-serif}
+button,input{font:inherit;border:0;border-radius:14px;padding:14px;width:100%}
+button{background:#22c55e;color:#06120a;font-weight:800;box-shadow:0 4px 0 #15803d}
+button:active{transform:translateY(2px);box-shadow:0 2px 0 #15803d}
+button:disabled{opacity:.45}
+.hidden{display:none!important}
+#rotate{display:none}
+@media(orientation:portrait){
+#rotate{display:flex;position:fixed;inset:0;z-index:50;background:#07111df5;align-items:center;justify-content:center;text-align:center;padding:30px;font-size:25px;font-weight:800}
 }
-
-.box{
-  max-width:520px;
-  margin:20px auto;
-  padding:20px;
-}
-
-button,input{
-  width:100%;
-  padding:15px;
-  margin:8px 0;
-  border:0;
-  border-radius:12px;
-  font-size:16px;
-}
-
-button{
-  background:#22c55e;
-  color:#fff;
-  font-weight:bold;
-}
-
-button:disabled{
-  opacity:.45;
-}
-
-input{
-  background:#26323b;
-  color:#fff;
-}
-
-.hidden{
-  display:none;
-}
-
-.players{
-  text-align:left;
-}
-
-.player{
-  background:#26323b;
-  padding:12px;
-  border-radius:10px;
-  margin:6px 0;
-}
-
-#map{
-  height:55vh;
-  min-height:360px;
-  border-radius:15px;
-  position:relative;
-  overflow:hidden;
-  background:
-    linear-gradient(35deg,transparent 44%,#777 45%,#777 51%,transparent 52%),
-    linear-gradient(120deg,transparent 45%,#777 46%,#777 52%,transparent 53%),
-    #397344;
-}
-
-.house{
-  position:absolute;
-  width:58px;
-  height:48px;
-  background:#b9b9b9;
-  border:3px solid #555;
-  border-radius:5px;
-}
-
-.tree{
-  position:absolute;
-  width:34px;
-  height:34px;
-  border-radius:50%;
-  background:#1f5f32;
-}
-
-.dot{
-  position:absolute;
-  width:24px;
-  height:24px;
-  border-radius:50%;
-  background:#22c55e;
-  border:3px solid white;
-  transform:translate(-50%,-50%);
-}
-
-#timer{
-  font-size:28px;
-  font-weight:bold;
-  margin:12px;
-}
+#menu,#lobby{width:min(500px,94vw);margin:auto;padding-top:9vh;text-align:center}
+.card{background:#101c2d;border:1px solid #2b3c55;border-radius:22px;padding:22px;box-shadow:0 14px 40px #0008}
+#menu h1{font-size:34px;margin:8px}
+input{background:#1e293b;color:#fff;outline:1px solid #334155;margin:8px 0}
+#status{min-height:22px;color:#a7f3d0}
+.code{font-size:38px;letter-spacing:8px}
+.player{background:#1e293b;border-radius:10px;padding:10px;margin:7px 0;text-align:left}
+#game{position:fixed;inset:0;background:#315f37}
+canvas{position:absolute;inset:0;width:100%;height:100%}
+#hud{position:absolute;left:10px;top:10px;right:10px;display:flex;justify-content:space-between;gap:8px;pointer-events:none}
+.pill{background:#08111dcc;border:1px solid #ffffff22;border-radius:13px;padding:8px 11px;font-weight:800;text-shadow:0 1px 2px #000}
+#healthBar{width:120px;height:10px;background:#35131a;border-radius:9px;overflow:hidden;margin-top:4px}
+.hp{height:100%;background:#ef4444;width:100%}
+#actions{position:absolute;right:18px;bottom:24px;display:grid;grid-template-columns:74px 74px;gap:11px}
+.action{width:74px;height:74px;border-radius:50%;padding:0;font-size:27px;background:#172554;color:#fff;border:2px solid #93c5fd;box-shadow:0 5px 0 #0f172a}
+#attack{background:#991b1b;border-color:#fecaca}
+#joystick{position:absolute;left:24px;bottom:26px;width:140px;height:140px;border-radius:50%;background:#0006;border:2px solid #ffffff44;touch-action:none}
+#stick{position:absolute;left:43px;top:43px;width:50px;height:50px;border-radius:50%;background:#ffffffaa;border:2px solid #fff}
+#bag{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(350px,88vw);background:#0b1220f5;border:1px solid #64748b;border-radius:18px;padding:18px;z-index:5}
+#bag button{margin-top:8px}
+.legend{font-size:12px;color:#cbd5e1}
 </style>
 </head>
-
 <body>
 
-<div class="box">
+<div id="rotate">📱<br>Gire o celular para jogar na horizontal.</div>
 
 <section id="menu">
+<div class="card">
 <h1>⚔️ Arena das Equipes</h1>
-<p>Jogue com seus amigos pela internet!</p>
-
+<p>Até 4 jogadores • multiplayer pela internet</p>
 <button id="createBtn">CRIAR SALA</button>
-
-<input id="codeInput"
-       placeholder="Digite o código da sala"
-       maxlength="5">
-
+<input id="codeInput" maxlength="5" placeholder="Código da sala">
 <button id="joinBtn">ENTRAR NA SALA</button>
-
 <p id="status"></p>
+</div>
 </section>
-
 
 <section id="lobby" class="hidden">
-
+<div class="card">
 <h2>🏠 Sala</h2>
-
-<p>Código da sala:</p>
-
-<h1 id="roomCode"></h1>
-
+<div class="code" id="roomCode"></div>
 <p id="count"></p>
-
-<div id="players" class="players"></div>
-
-<button id="startBtn" disabled>
-COMEÇAR PARTIDA
-</button>
-
+<div id="players"></div>
+<button id="startBtn" disabled>COMEÇAR PARTIDA</button>
 <p id="lobbyStatus"></p>
-
+</div>
 </section>
-
 
 <section id="game" class="hidden">
+<canvas id="canvas"></canvas>
 
-<h2>⚔️ Arena</h2>
-
-<p id="gameInfo">Fase de coleta</p>
-
-<div id="timer">30</div>
-
-<div id="map">
-
-<div class="house" style="left:18%;top:18%"></div>
-<div class="house" style="left:65%;top:20%"></div>
-<div class="house" style="left:42%;top:58%"></div>
-<div class="house" style="left:72%;top:70%"></div>
-
-<div class="tree" style="left:10%;top:60%"></div>
-<div class="tree" style="left:30%;top:34%"></div>
-<div class="tree" style="left:55%;top:12%"></div>
-<div class="tree" style="left:82%;top:48%"></div>
-
-<div id="me"
-     class="dot"
-     style="left:50%;top:50%">
+<div id="hud">
+<div class="pill">
+❤️ <span id="hpText">100</span>
+<div id="healthBar"><div id="hp" class="hp"></div></div>
 </div>
 
+<div class="pill">
+🔫 <span id="ammo">12</span>　🎒 <span id="meds">1</span>
 </div>
 
+<div class="pill">
+⏱️ <span id="timer">30</span>
+</div>
+</div>
+
+<div id="joystick">
+<div id="stick"></div>
+</div>
+
+<div id="actions">
+<button class="action" id="heal">❤️</button>
+<button class="action" id="attack">🔫</button>
+<button class="action" id="bagBtn">🎒</button>
+</div>
+
+<div id="bag" class="hidden">
+<h2>🎒 Mochila</h2>
+<p>🔫 Munição: <b id="bagAmmo">12</b></p>
+<p>💊 Kits médicos: <b id="bagMeds">1</b></p>
+<p class="legend">Ande sobre os itens brilhantes para recolhê-los.</p>
+<button id="closeBag">FECHAR</button>
+</div>
 </section>
 
-</div>
-
-
 <script>
+const MAX=4,W=2400,H=1600;
+const canvas=document.getElementById("canvas");
+const ctx=canvas.getContext("2d");
 
-const MAX_PLAYERS = 4;
+let ws=null;
+let myId="";
+let started=false;
+let players={};
+let loot=[];
+let joy={x:0,y:0};
+let keys={};
+let timer=30;
+let timerId;
 
-let ws;
-let myId = "";
-let roomCode = "";
-let isHost = false;
-let timerId = null;
+const $=id=>document.getElementById(id);
 
-const $ = id => document.getElementById(id);
-
-
-function wsUrl(){
-
-  return (location.protocol === "https:" ? "wss:" : "ws:")
-    + "//"
-    + location.host;
-
+function resize(){
+canvas.width=innerWidth*devicePixelRatio;
+canvas.height=innerHeight*devicePixelRatio;
+ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
 }
 
+addEventListener("resize",resize);
+resize();
 
-function connect(callback){
+function connect(cb){
+if(ws&&ws.readyState===1)return cb();
 
-  if(ws && ws.readyState === WebSocket.OPEN){
+ws=new WebSocket(
+(location.protocol==="https:"?"wss://":"ws://")+location.host
+);
 
-    $("status").textContent = "Conectado.";
+ws.onopen=()=>{
+$("status").textContent="Conectado ao servidor.";
+cb();
+};
 
-    callback();
-    return;
+ws.onclose=()=>{
+$("status").textContent="Conexão encerrada. Recarregue a página.";
+};
 
-  }
+ws.onerror=()=>{
+$("status").textContent="Não foi possível conectar ao servidor.";
+};
 
+ws.onmessage=e=>{
+let m;
 
-  ws = new WebSocket(wsUrl());
-
-
-  ws.onopen = () => {
-
-    $("status").textContent = "Conectado.";
-
-    callback();
-
-  };
-
-
-  ws.onclose = () => {
-
-    $("status").textContent =
-      "Conexão encerrada. Recarregue a página.";
-
-  };
-
-
-  ws.onmessage = e => {
-
-    const m = JSON.parse(e.data);
-
-
-    if(m.type === "welcome"){
-
-      myId = m.id;
-
-    }
-
-
-    if(m.type === "error"){
-
-      alert(m.message);
-
-    }
-
-
-    if(m.type === "room_state"){
-
-      roomCode = m.code;
-
-      isHost = m.hostId === myId;
-
-      showLobby(m);
-
-    }
-
-
-    if(m.type === "game_started"){
-
-      showGame(m.lootSeconds || 30);
-
-    }
-
-  };
-
+try{
+m=JSON.parse(e.data);
+}catch{
+return;
 }
 
+if(m.type==="welcome")
+myId=m.id;
+
+if(m.type==="error")
+alert(m.message);
+
+if(m.type==="room_state")
+showLobby(m);
+
+if(m.type==="game_started")
+startGame(m.seconds||30);
+
+if(m.type==="game_state"){
+players={};
+
+m.players.forEach(p=>{
+players[p.id]=p;
+});
+
+loot=m.loot||[];
+
+const p=players[myId];
+
+if(p){
+$("hpText").textContent=p.hp;
+$("hp").style.width=p.hp+"%";
+$("ammo").textContent=p.ammo;
+$("meds").textContent=p.medkits;
+$("bagAmmo").textContent=p.ammo;
+$("bagMeds").textContent=p.medkits;
+}
+}
+};
+}
 
 function send(o){
-
-  if(ws && ws.readyState === WebSocket.OPEN){
-
-    ws.send(JSON.stringify(o));
-
-  }
-
+if(ws&&ws.readyState===1)
+ws.send(JSON.stringify(o));
 }
-
 
 function showLobby(m){
+$("menu").classList.add("hidden");
+$("game").classList.add("hidden");
+$("lobby").classList.remove("hidden");
 
-  $("menu").classList.add("hidden");
+$("roomCode").textContent=m.code;
+$("count").textContent="Jogadores: "+m.players.length+"/"+MAX;
 
-  $("game").classList.add("hidden");
+$("players").innerHTML=m.players.map((p,i)=>
+'<div class="player">'+
+(i+1)+". "+
+(p.id===m.hostId?"👑 Dono da sala":"👤 Jogador")+
+"</div>"
+).join("");
 
-  $("lobby").classList.remove("hidden");
+const host=m.hostId===myId;
 
+$("startBtn").style.display=host?"block":"none";
+$("startBtn").disabled=!host||m.players.length<2;
 
-  $("roomCode").textContent = m.code;
-
-
-  $("count").textContent =
-    `Jogadores: ${m.players.length}/${MAX_PLAYERS}`;
-
-
-  $("players").innerHTML =
-    m.players.map((p,i) =>
-      `<div class="player">
-        ${i+1}.
-        ${p.id === m.hostId
-          ? "👑 Dono da sala"
-          : "👤 Jogador"}
-      </div>`
-    ).join("");
-
-
-  $("startBtn").style.display =
-    isHost ? "block" : "none";
-
-
-  $("startBtn").disabled =
-    !isHost || m.players.length < 2;
-
-
-  $("lobbyStatus").textContent =
-    isHost
-      ? (
-          m.players.length < 2
-            ? "Aguardando pelo menos 2 jogadores..."
-            : "Você pode começar a partida."
-        )
-      : "Aguardando o dono da sala iniciar a partida...";
-
+$("lobbyStatus").textContent=
+host
+?(m.players.length<2
+?"Aguardando pelo menos 2 jogadores..."
+:"Pronto para começar!")
+:"Aguardando o dono da sala iniciar...";
 }
 
+function startGame(sec){
+started=true;
 
-function showGame(seconds){
+$("lobby").classList.add("hidden");
+$("game").classList.remove("hidden");
 
-  $("lobby").classList.add("hidden");
+timer=sec;
+$("timer").textContent=timer;
 
-  $("game").classList.remove("hidden");
+clearInterval(timerId);
 
+timerId=setInterval(()=>{
+$("timer").textContent=Math.max(0,--timer);
 
-  let n = seconds;
+if(timer<=0)
+clearInterval(timerId);
+},1000);
 
-  $("timer").textContent = n;
-
-
-  clearInterval(timerId);
-
-
-  timerId = setInterval(() => {
-
-    n--;
-
-    $("timer").textContent = Math.max(0,n);
-
-
-    if(n <= 0){
-
-      clearInterval(timerId);
-
-      $("gameInfo").textContent =
-        "🔥 Arena liberada!";
-
-    }
-
-  },1000);
-
+requestAnimationFrame(draw);
 }
 
-
-/* CRIAR SALA */
-
-$("createBtn").onclick = () => {
-
-  connect(() => {
-
-    send({
-      type:"create_room"
-    });
-
-  });
-
+$("createBtn").onclick=()=>{
+connect(()=>{
+send({type:"create_room"});
+});
 };
 
+$("joinBtn").onclick=()=>{
+const c=$("codeInput").value.trim().toUpperCase();
 
-/* ENTRAR NA SALA */
+if(c.length!==5)
+return alert("Digite o código de 5 caracteres.");
 
-$("joinBtn").onclick = () => {
-
-  const c =
-    $("codeInput").value
-      .trim()
-      .toUpperCase();
-
-
-  if(c.length !== 5){
-
-    return alert(
-      "Digite o código de 5 caracteres."
-    );
-
-  }
-
-
-  connect(() => {
-
-    send({
-      type:"join_room",
-      code:c
-    });
-
-  });
-
+connect(()=>{
+send({type:"join_room",code:c});
+});
 };
 
-
-/* COMEÇAR PARTIDA */
-
-$("startBtn").onclick = () => {
-
-  send({
-    type:"start_game"
-  });
-
+$("startBtn").onclick=()=>{
+send({type:"start_game"});
 };
 
+$("attack").onclick=()=>{
+send({type:"attack"});
+};
+
+$("heal").onclick=()=>{
+send({type:"heal"});
+};
+
+$("bagBtn").onclick=()=>{
+$("bag").classList.remove("hidden");
+};
+
+$("closeBag").onclick=()=>{
+$("bag").classList.add("hidden");
+};
+
+addEventListener("keydown",e=>{
+keys[e.key.toLowerCase()]=true;
+});
+
+addEventListener("keyup",e=>{
+keys[e.key.toLowerCase()]=false;
+});
+
+setInterval(()=>{
+if(!started)return;
+
+let x=joy.x;
+let y=joy.y;
+
+if(keys.w||keys.arrowup)y--;
+if(keys.s||keys.arrowdown)y++;
+if(keys.a||keys.arrowleft)x--;
+if(keys.d||keys.arrowright)x++;
+
+if(x||y)
+send({type:"move",dx:x,dy:y});
+},50);
+
+const base=$("joystick");
+const stick=$("stick");
+
+function joyMove(e){
+const r=base.getBoundingClientRect();
+const cx=r.left+r.width/2;
+const cy=r.top+r.height/2;
+
+let dx=e.clientX-cx;
+let dy=e.clientY-cy;
+
+let d=Math.hypot(dx,dy);
+const max=45;
+
+if(d>max){
+dx=dx/d*max;
+dy=dy/d*max;
+}
+
+joy.x=dx/max;
+joy.y=dy/max;
+
+stick.style.transform=
+"translate("+dx+"px,"+dy+"px)";
+}
+
+function joyEnd(){
+joy.x=0;
+joy.y=0;
+stick.style.transform="";
+}
+
+base.addEventListener("pointerdown",e=>{
+base.setPointerCapture(e.pointerId);
+joyMove(e);
+});
+
+base.addEventListener("pointermove",e=>{
+if(e.buttons)
+joyMove(e);
+});
+
+base.addEventListener("pointerup",joyEnd);
+base.addEventListener("pointercancel",joyEnd);
+
+function draw(){
+if(!started)return;
+
+ctx.clearRect(0,0,innerWidth,innerHeight);
+
+const me=players[myId]||{
+x:1200,
+y:800
+};
+
+const scale=Math.min(
+innerWidth/900,
+innerHeight/600
+);
+
+const camX=
+me.x-innerWidth/2/scale;
+
+const camY=
+me.y-innerHeight/2/scale;
+
+ctx.save();
+
+ctx.scale(scale,scale);
+ctx.translate(-camX,-camY);
+
+ctx.fillStyle="#3f7d45";
+ctx.fillRect(0,0,W,H);
+
+ctx.strokeStyle="#d2b36c";
+ctx.lineWidth=90;
+
+ctx.beginPath();
+ctx.moveTo(0,800);
+ctx.lineTo(W,800);
+ctx.moveTo(1200,0);
+ctx.lineTo(1200,H);
+ctx.stroke();
+
+for(let i=0;i<9;i++){
+let x=150+i*270;
+let y=180+(i%3)*360;
+
+ctx.fillStyle="#a78b6a";
+ctx.fillRect(x,y,150,120);
+
+ctx.fillStyle="#7c2d12";
+ctx.fillRect(x+15,y+15,120,38);
+
+ctx.fillStyle="#334155";
+ctx.fillRect(x+60,y+65,32,55);
+}
+
+for(let i=0;i<28;i++){
+let x=80+(i*197)%2250;
+let y=80+(i*311)%1450;
+
+ctx.fillStyle="#1f5f32";
+ctx.beginPath();
+ctx.arc(x,y,30,0,Math.PI*2);
+ctx.fill();
+
+ctx.fillStyle="#6b4f2a";
+ctx.fillRect(x-5,y+20,10,30);
+}
+
+loot.forEach(l=>{
+ctx.fillStyle=
+l.kind==="medkit"
+?"#fbbf24"
+:"#93c5fd";
+
+ctx.fillRect(
+l.x-15,
+l.y-15,
+30,
+30
+);
+
+ctx.fillStyle="#111";
+ctx.font="22px Arial";
+
+ctx.fillText(
+l.kind==="medkit"?"✚":"▪",
+l.x-9,
+l.y+8
+);
+});
+
+Object.values(players).forEach(p=>{
+ctx.fillStyle=
+p.id===myId
+?"#22c55e"
+:"#60a5fa";
+
+ctx.beginPath();
+ctx.arc(
+p.x,
+p.y,
+24,
+0,
+Math.PI*2
+);
+ctx.fill();
+
+ctx.strokeStyle="#fff";
+ctx.lineWidth=4;
+ctx.stroke();
+
+ctx.fillStyle="#111";
+ctx.fillRect(
+p.x-24,
+p.y-40,
+48,
+6
+);
+
+ctx.fillStyle="#ef4444";
+ctx.fillRect(
+p.x-24,
+p.y-40,
+48*Math.max(0,p.hp)/100,
+6
+);
+
+ctx.fillStyle="#fff";
+ctx.font="bold 15px Arial";
+ctx.textAlign="center";
+
+ctx.fillText(
+p.id===myId
+?"VOCÊ"
+:"JOGADOR",
+p.x,
+p.y+48
+);
+});
+
+ctx.restore();
+
+requestAnimationFrame(draw);
+}
 </script>
-
 </body>
 </html>
