@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Arena das Equipes</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#101820;color:white;font-family:Arial;text-align:center}
+h1{margin:25px 0 10px;color:#4ade80}
+.box{max-width:420px;margin:auto;padding:20px}
+button,input{width:100%;padding:15px;margin:8px 0;border:0;border-radius:10px;font-size:17px}
+button{background:#22c55e;color:white;font-weight:bold}
+input{background:#26323b;color:white}
+#jogo{display:none}
+#mapa{height:55vh;margin-top:15px;border-radius:15px;background:
+linear-gradient(35deg,transparent 45%,#555 46%,#555 50%,transparent 51%),
+linear-gradient(120deg,transparent 45%,#555 46%,#555 50%,transparent 51%),
+#397344;position:relative;overflow:hidden}
+.jogador{position:absolute;width:25px;height:25px;border-radius:50%;
+background:#22c55e;border:3px solid white;transform:translate(-50%,-50%)}
+#amigo{background:#ef4444}
+#status{margin:15px}
+</style>
+</head>
+<body>
+
+<div class="box" id="menu">
+<h1>⚔️ Arena das Equipes</h1>
+<p>Jogue com seus amigos pela internet!</p>
+
+<button onclick="criarSala()">CRIAR SALA</button>
+
+<input id="codigo" placeholder="Digite o código da sala">
+<button onclick="entrarSala()">ENTRAR NA SALA</button>
+
+<p id="status"></p>
+</div>
+
+<div class="box" id="jogo">
+<h1>🏟️ Arena</h1>
+<p id="sala"></p>
+<button onclick="localizacao()">📍 PERMITIR LOCALIZAÇÃO</button>
+<div id="mapa">
+<div id="eu" class="jogador" style="left:50%;top:50%"></div>
+<div id="amigo" class="jogador" style="left:70%;top:40%;display:none"></div>
+</div>
+<p id="statusJogo">Aguardando jogadores...</p>
+</div>
+
+<script>
+let salaAtual="";
+
+function criarSala(){
+ salaAtual=Math.random().toString(36).substring(2,7).toUpperCase();
+ document.getElementById("menu").style.display="none";
+ document.getElementById("jogo").style.display="block";
+ document.getElementById("sala").innerHTML="Código da sala: <b>"+salaAtual+"</b>";
+ document.getElementById("statusJogo").innerText="Envie o código para seu amigo!";
+}
+
+function entrarSala(){
+ let c=document.getElementById("codigo").value.trim().toUpperCase();
+ if(!c){alert("Digite o código da sala.");return}
+ salaAtual=c;
+ document.getElementById("menu").style.display="none";
+ document.getElementById("jogo").style.display="block";
+ document.getElementById("sala").innerHTML="Sala: <b>"+c+"</b>";
+ document.getElementById("amigo").style.display="block";
+ document.getElementById("statusJogo").innerText="Você entrou na sala!";
+}
+
+function localizacao(){
+ if(!navigator.geolocation){
+  alert("Seu navegador não permite localização.");
+  return;
+ }
+ navigator.geolocation.getCurrentPosition(
+  p=>{
+   document.getElementById("statusJogo").innerText=
+   "📍 Localização permitida! Aguardando o outro jogador...";
+  },
+  e=>{
+   alert("Você precisa permitir a localização para continuar.");
+  }
+ );
+}
+</script>
+
+</body>
+</html>
