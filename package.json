@@ -1,0 +1,12 @@
+{
+  "name": "arena-das-equipes",
+  "version": "1.0.0",
+  "description": "Jogo multiplayer online",
+  "main": "servidor.js",
+  "scripts": {
+    "start": "node servidor.js"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}
