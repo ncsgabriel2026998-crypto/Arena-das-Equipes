@@ -4,28 +4,24 @@ const path = require("path");
 const WebSocket = require("ws");
 
 const PORT = process.env.PORT || 3000;
+const rooms = new Map();
 
 const server = http.createServer((req, res) => {
-  let file = req.url === "/" ? "/index.html" : req.url;
-  const filePath = path.join(__dirname, file);
+  const filePath = path.join(__dirname, "index.html");
 
-  if (!fs.existsSync(filePath)) {
+  if (req.url !== "/" && req.url !== "/index.html") {
     res.writeHead(404);
     return res.end("Not found");
   }
 
-  const ext = path.extname(filePath);
-  const type = ext === ".html" ? "text/html" : "text/plain";
-
   res.writeHead(200, {
-    "Content-Type": type
+    "Content-Type": "text/html; charset=utf-8"
   });
 
   fs.createReadStream(filePath).pipe(res);
 });
 
 const wss = new WebSocket.Server({ server });
-const rooms = new Map();
 
 function send(ws, message) {
   if (ws.readyState === WebSocket.OPEN) {
@@ -34,120 +30,165 @@ function send(ws, message) {
 }
 
 function broadcast(room, message) {
-  for (const ws of room.players) {
-    send(ws, message);
+  for (const player of room.players) {
+    send(player, message);
   }
 }
 
-function getRoom(id) {
-  if (!rooms.has(id)) {
-    rooms.set(id, {
-      players: new Set(),
-      positions: new Map()
-    });
-  }
-
-  return rooms.get(id);
+function roomState(room) {
+  return {
+    type: "room_state",
+    code: room.code,
+    hostId: room.hostId,
+    players: [...room.players].map(player => ({
+      id: player.id
+    }))
+  };
 }
 
-wss.on("connection", (ws) => {
+function broadcastState(room) {
+  broadcast(room, roomState(room));
+}
 
-  ws.on("message", (raw) => {
+function newRoomCode() {
+  let code;
 
+  do {
+    code = Math.random()
+      .toString(36)
+      .slice(2, 7)
+      .toUpperCase();
+  } while (rooms.has(code));
+
+  return code;
+}
+
+function leaveRoom(ws) {
+  const code = ws.roomCode;
+
+  if (!code) return;
+
+  const room = rooms.get(code);
+
+  if (!room) return;
+
+  room.players.delete(ws);
+  ws.roomCode = "";
+
+  if (room.players.size === 0) {
+    rooms.delete(code);
+    return;
+  }
+
+  if (room.hostId === ws.id) {
+    room.hostId = [...room.players][0].id;
+  }
+
+  broadcastState(room);
+}
+
+wss.on("connection", ws => {
+  ws.id = Math.random()
+    .toString(36)
+    .slice(2, 10);
+
+  ws.roomCode = "";
+
+  send(ws, {
+    type: "welcome",
+    id: ws.id
+  });
+
+  ws.on("message", data => {
     let message;
 
     try {
-      message = JSON.parse(raw);
+      message = JSON.parse(data.toString());
     } catch {
       return;
     }
 
-    if (message.type === "join") {
+    if (message.type === "create_room") {
+      leaveRoom(ws);
 
-      const roomId = String(message.room || "").toUpperCase();
+      const code = newRoomCode();
 
-      if (!roomId) return;
+      const room = {
+        code,
+        hostId: ws.id,
+        players: new Set([ws]),
+        started: false
+      };
 
-      const room = getRoom(roomId);
+      rooms.set(code, room);
+      ws.roomCode = code;
+
+      broadcastState(room);
+      return;
+    }
+
+    if (message.type === "join_room") {
+      const code = String(message.code || "").toUpperCase();
+      const room = rooms.get(code);
+
+      if (!room) {
+        return send(ws, {
+          type: "error",
+          message: "Sala não encontrada."
+        });
+      }
+
+      if (room.started) {
+        return send(ws, {
+          type: "error",
+          message: "A partida já começou."
+        });
+      }
 
       if (room.players.size >= 4) {
-        send(ws, {
+        return send(ws, {
           type: "error",
-          message: "Sala cheia"
+          message: "Sala cheia."
         });
+      }
+
+      leaveRoom(ws);
+
+      room.players.add(ws);
+      ws.roomCode = code;
+
+      broadcastState(room);
+      return;
+    }
+
+    if (message.type === "start_game") {
+      const room = rooms.get(ws.roomCode);
+
+      if (!room || room.hostId !== ws.id) {
         return;
       }
 
-      ws.room = roomId;
+      if (room.players.size < 2) {
+        return send(ws, {
+          type: "error",
+          message: "É preciso ter pelo menos 2 jogadores."
+        });
+      }
 
-      ws.playerId =
-        message.playerId ||
-        Math.random().toString(36).slice(2);
-
-      room.players.add(ws);
-
-      send(ws, {
-        type: "joined",
-        room: roomId,
-        playerId: ws.playerId
-      });
+      room.started = true;
 
       broadcast(room, {
-        type: "count",
-        count: room.players.size
-      });
-    }
-
-    if (message.type === "location" && ws.room) {
-
-      const room = rooms.get(ws.room);
-
-      if (!room) return;
-
-      room.positions.set(ws.playerId, {
-        lat: message.lat,
-        lon: message.lon
-      });
-
-      broadcast(room, {
-        type: "positions",
-        positions: [
-          ...room.positions
-        ].map(([id, position]) => ({
-          id,
-          ...position
-        }))
+        type: "game_started",
+        lootSeconds: 30
       });
     }
   });
 
   ws.on("close", () => {
-
-    if (!ws.room) return;
-
-    const room = rooms.get(ws.room);
-
-    if (!room) return;
-
-    room.players.delete(ws);
-    room.positions.delete(ws.playerId);
-
-    broadcast(room, {
-      type: "positions",
-      positions: [
-        ...room.positions
-      ].map(([id, position]) => ({
-        id,
-        ...position
-      }))
-    });
-
-    if (room.players.size === 0) {
-      rooms.delete(ws.room);
-    }
+    leaveRoom(ws);
   });
 });
 
 server.listen(PORT, () => {
-  console.log("Arena das Equipes online na porta " + PORT);
+  console.log(`Arena das Equipes online na porta ${PORT}`);
 });
